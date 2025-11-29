@@ -1,0 +1,160 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Test Audio Upload</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+        }
+        .test-section {
+            margin: 20px 0;
+            padding: 20px;
+            border: 1px solid #ddd;
+            border-radius: 8px;
+        }
+        button {
+            padding: 10px 20px;
+            margin: 10px 5px;
+            font-size: 16px;
+            cursor: pointer;
+        }
+        .log {
+            background: #f5f5f5;
+            padding: 10px;
+            margin: 10px 0;
+            border-radius: 4px;
+            font-family: monospace;
+            font-size: 12px;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+    </style>
+</head>
+<body>
+    <h1>Test Audio Upload to AssemblyAI</h1>
+    
+    <div class="test-section">
+        <h2>Upload test_audio.m4a</h2>
+        <input type="file" id="fileInput" accept="audio/*" />
+        <button onclick="testUpload()">Test Upload</button>
+        <div id="log" class="log"></div>
+    </div>
+
+    <script>
+        const API_KEY = 'f1b67411fddd4189872004b4a4d9c16a';
+        const API_URL = 'https://api.assemblyai.com/v2';
+
+        function log(message) {
+            const logDiv = document.getElementById('log');
+            logDiv.innerHTML += message + '<br>';
+            logDiv.scrollTop = logDiv.scrollHeight;
+            console.log(message);
+        }
+
+        async function testUpload() {
+            const fileInput = document.getElementById('fileInput');
+            const file = fileInput.files[0];
+            
+            if (!file) {
+                log('❌ Please select a file first');
+                return;
+            }
+
+            log(`📁 File: ${file.name}`);
+            log(`   Size: ${(file.size / 1024 / 1024).toFixed(2)} MB`);
+            log(`   Type: ${file.type}`);
+
+            try {
+                // Step 1: Upload
+                log('\n📤 Step 1: Uploading...');
+                const formData = new FormData();
+                formData.append('file', file);
+
+                const uploadResponse = await fetch(`${API_URL}/upload`, {
+                    method: 'POST',
+                    headers: {
+                        authorization: API_KEY,
+                    },
+                    body: formData,
+                });
+
+                if (!uploadResponse.ok) {
+                    const error = await uploadResponse.text();
+                    throw new Error(`Upload failed: ${uploadResponse.status} - ${error}`);
+                }
+
+                const uploadData = await uploadResponse.json();
+                const uploadUrl = uploadData.upload_url;
+                log(`✅ Upload successful: ${uploadUrl}`);
+
+                // Step 2: Start transcription
+                log('\n📝 Step 2: Starting transcription...');
+                const transcriptResponse = await fetch(`${API_URL}/transcript`, {
+                    method: 'POST',
+                    headers: {
+                        authorization: API_KEY,
+                        'content-type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        audio_url: uploadUrl,
+                        speaker_labels: true,
+                        language_detection: true,
+                    }),
+                });
+
+                const transcriptData = await transcriptResponse.json();
+                const transcriptId = transcriptData.id;
+                log(`✅ Transcription started: ${transcriptId}`);
+
+                // Step 3: Poll
+                log('\n⏳ Step 3: Polling...');
+                let attempts = 0;
+                while (attempts < 60) {
+                    await new Promise(r => setTimeout(r, 2000));
+                    
+                    const statusResponse = await fetch(`${API_URL}/transcript/${transcriptId}`, {
+                        headers: { authorization: API_KEY },
+                    });
+                    const statusData = await statusResponse.json();
+                    
+                    log(`   Attempt ${attempts + 1}: ${statusData.status}`);
+
+                    if (statusData.status === 'completed') {
+                        log('\n✅ COMPLETED!');
+                        log(`   Utterances: ${statusData.utterances?.length || 0}`);
+                        log(`   Words: ${statusData.words?.length || 0}`);
+                        
+                        if (statusData.utterances && statusData.utterances.length > 0) {
+                            log('\n👥 Speakers:');
+                            const speakers = new Set();
+                            statusData.utterances.forEach(u => speakers.add(u.speaker));
+                            log(`   Found ${speakers.size} speaker(s): ${Array.from(speakers).join(', ')}`);
+                            
+                            statusData.utterances.slice(0, 3).forEach((u, i) => {
+                                log(`\n   Utterance ${i + 1} (${u.speaker}):`);
+                                log(`      "${u.text}"`);
+                            });
+                        }
+                        return;
+                    }
+
+                    if (statusData.status === 'error') {
+                        throw new Error(`Transcription failed: ${statusData.error}`);
+                    }
+
+                    attempts++;
+                }
+
+                throw new Error('Timeout');
+            } catch (error) {
+                log(`\n❌ ERROR: ${error.message}`);
+                if (error.stack) log(error.stack);
+            }
+        }
+    </script>
+</body>
+</html>
+
