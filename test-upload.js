@@ -25,8 +25,7 @@ try {
 }
 
 const API_KEY = process.env.VITE_ASSEMBLY_AI_API_KEY ||
-                process.env.API_KEY ||
-                'f1b67411fddd4189872004b4a4d9c16a';
+                process.env.API_KEY;
 const API_URL = 'https://api.assemblyai.com/v2';
 
 if (!API_KEY) {

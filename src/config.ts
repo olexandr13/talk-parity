@@ -6,6 +6,6 @@ export const API_CONFIG = {
   // Set your API key here directly (or use .env file)
   // In .env file, use: VITE_ASSEMBLY_AI_API_KEY=your_key_here
   // (Vite requires VITE_ prefix for environment variables)
-  ASSEMBLY_AI_API_KEY: 'f1b67411fddd4189872004b4a4d9c16a',
+  ASSEMBLY_AI_API_KEY: import.meta.env.VITE_ASSEMBLY_AI_API_KEY,
 };
 
