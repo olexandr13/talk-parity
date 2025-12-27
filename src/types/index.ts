@@ -38,3 +38,13 @@ export interface RecordingState {
   apiInfo: ApiRequestInfo | null;
 }
 
+export interface HistoryItem {
+  id: string; // Unique identifier for the history item
+  name: string; // User-provided name for the recording
+  transcriptId: string; // AssemblyAI transcript ID
+  timestamp: number; // When this was created
+  speakers: Speaker[]; // Speaker data
+  duration: number; // Total duration in milliseconds
+  apiInfo?: ApiRequestInfo; // Optional API info
+}
+

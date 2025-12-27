@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
 import { speakerDiarizationService } from '../services/SpeakerDiarizationService';
+import { saveApiKey } from '../config';
 import './ApiKeyInput.css';
 
 interface ApiKeyInputProps {
@@ -14,7 +15,11 @@ export const ApiKeyInput: React.FC<ApiKeyInputProps> = ({ onApiKeySet, onClose }
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (apiKey.trim()) {
-      speakerDiarizationService.setApiKey(apiKey.trim());
+      const trimmedKey = apiKey.trim();
+      // Save to service
+      speakerDiarizationService.setApiKey(trimmedKey);
+      // Save to localStorage for persistence
+      saveApiKey(trimmedKey);
       setIsVisible(false);
       onApiKeySet();
     }

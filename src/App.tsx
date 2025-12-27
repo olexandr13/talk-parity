@@ -3,9 +3,11 @@ import { RecordingControls } from './components/RecordingControls';
 import { SpeakerStats } from './components/SpeakerStats';
 import { ApiKeyInput } from './components/ApiKeyInput';
 import { ApiInfo } from './components/ApiInfo';
+import { History } from './components/History';
 import { audioRecorderService } from './services/AudioRecorderService';
 import { speakerDiarizationService } from './services/SpeakerDiarizationService';
-import { RecordingState, ApiRequestInfo } from './types';
+import { HistoryService } from './services/HistoryService';
+import { RecordingState, ApiRequestInfo, HistoryItem } from './types';
 import { API_CONFIG } from './config';
 import './App.css';
 
@@ -24,12 +26,15 @@ const App: React.FC = () => {
   const [showApiKeyInput, setShowApiKeyInput] = useState(false);
   const [apiKeySet, setApiKeySet] = useState(false);
   const [processingElapsedTime, setProcessingElapsedTime] = useState<number>(0);
+  const [history, setHistory] = useState<HistoryItem[]>([]);
+  const [currentHistoryId, setCurrentHistoryId] = useState<string | null>(null);
+  const [lastSavedTranscriptId, setLastSavedTranscriptId] = useState<string | null>(null);
 
   useEffect(() => {
-    // Configure API key from environment variable or config file
-    // Note: Vite requires VITE_ prefix for env vars, but we use ASSEMBLY_AI_API_KEY internally
-    const apiKey = import.meta.env.VITE_ASSEMBLY_AI_API_KEY ||
-                   API_CONFIG.ASSEMBLY_AI_API_KEY;
+    // Configure API key from:
+    // 1. Environment variable (.env file with VITE_ prefix)
+    // 2. localStorage (if user entered it via UI)
+    const apiKey = API_CONFIG.ASSEMBLY_AI_API_KEY;
     
     if (apiKey && apiKey.trim()) {
       console.log('API key found and set');
@@ -50,6 +55,9 @@ const App: React.FC = () => {
       setShowApiKeyInput(true);
     }
 
+    // Load history from local storage
+    const savedHistory = HistoryService.getHistory();
+    setHistory(savedHistory);
 
     return () => {
       if (intervalRef.current) {
@@ -75,6 +83,23 @@ const App: React.FC = () => {
     return () => clearInterval(interval);
   }, [recordingState.apiInfo?.processingStartTime, recordingState.apiInfo?.transcriptStatus]);
 
+  // Auto-save to history when processing completes successfully
+  useEffect(() => {
+    if (
+      !recordingState.isProcessing &&
+      recordingState.speakers.length > 0 &&
+      recordingState.apiInfo?.transcriptId &&
+      !currentHistoryId && // Don't save if we just loaded from history
+      recordingState.apiInfo.transcriptId !== lastSavedTranscriptId // Don't save if already saved
+    ) {
+      // Auto-save with default name
+      const now = new Date();
+      const defaultName = `Recording ${now.toLocaleDateString()} ${now.toLocaleTimeString()}`;
+      saveToHistory(defaultName);
+      setLastSavedTranscriptId(recordingState.apiInfo.transcriptId);
+    }
+  }, [recordingState.isProcessing, recordingState.speakers.length, recordingState.apiInfo?.transcriptId, currentHistoryId, lastSavedTranscriptId]);
+
   const handleApiKeySet = () => {
     setApiKeySet(true);
     setShowApiKeyInput(false);
@@ -94,6 +119,7 @@ const App: React.FC = () => {
         error: null,
         apiInfo: null,
       }));
+      setCurrentHistoryId(null); // Clear history ID for new recording
 
       // Update duration every second
       intervalRef.current = setInterval(() => {
@@ -157,6 +183,7 @@ const App: React.FC = () => {
         duration: 0,
         apiInfo: null,
       }));
+      setCurrentHistoryId(null); // Clear history ID for new upload
 
       console.log('📁 File selected for upload:', {
         name: file.name,
@@ -286,6 +313,8 @@ const App: React.FC = () => {
       error: null,
       apiInfo: null,
     });
+    setCurrentHistoryId(null);
+    setLastSavedTranscriptId(null);
   };
 
   const handleSpeakerRename = (speakerId: string, newName: string) => {
@@ -297,6 +326,61 @@ const App: React.FC = () => {
           : speaker
       ),
     }));
+  };
+
+  const saveToHistory = (name: string) => {
+    if (!recordingState.apiInfo?.transcriptId) {
+      console.error('No transcript ID available');
+      return;
+    }
+
+    const historyItem: HistoryItem = {
+      id: `history-${Date.now()}-${Math.random().toString(36).substr(2, 9)}`,
+      name: name.trim() || 'Untitled Recording',
+      transcriptId: recordingState.apiInfo.transcriptId,
+      timestamp: Date.now(),
+      speakers: recordingState.speakers,
+      duration: recordingState.duration,
+      apiInfo: recordingState.apiInfo,
+    };
+
+    HistoryService.addHistoryItem(historyItem);
+    setHistory(HistoryService.getHistory());
+    setCurrentHistoryId(historyItem.id);
+  };
+
+  const handleLoadHistoryItem = (item: HistoryItem) => {
+    setRecordingState({
+      isRecording: false,
+      isProcessing: false,
+      duration: item.duration,
+      speakers: item.speakers,
+      error: null,
+      apiInfo: item.apiInfo || null,
+    });
+    setCurrentHistoryId(item.id);
+  };
+
+  const handleRenameHistoryItem = (id: string, newName: string) => {
+    HistoryService.updateHistoryItem(id, { name: newName });
+    setHistory(HistoryService.getHistory());
+  };
+
+  const handleDeleteHistoryItem = (id: string) => {
+    HistoryService.deleteHistoryItem(id);
+    setHistory(HistoryService.getHistory());
+    
+    // If we deleted the currently loaded item, clear the state
+    if (currentHistoryId === id) {
+      reset();
+      setCurrentHistoryId(null);
+    }
+  };
+
+  const handleClearHistory = () => {
+    HistoryService.clearHistory();
+    setHistory([]);
+    setCurrentHistoryId(null);
   };
 
   return (
@@ -347,6 +431,14 @@ const App: React.FC = () => {
           <ApiInfo apiInfo={recordingState.apiInfo} />
         )}
 
+        <History
+          history={history}
+          onLoadItem={handleLoadHistoryItem}
+          onRenameItem={handleRenameHistoryItem}
+          onDeleteItem={handleDeleteHistoryItem}
+          onClearHistory={handleClearHistory}
+          activeItemId={currentHistoryId}
+        />
 
         {recordingState.error && (
           <div className="error-message">

@@ -461,7 +461,7 @@ export class SpeakerDiarizationService {
    * Poll transcription status until complete
    */
   private async pollForCompletion(transcriptId: string, apiInfo: ApiInfo): Promise<DiarizationSegment[]> {
-    const maxAttempts = 60;
+    const maxAttempts = 100;
     let attempts = 0;
     const pollUrl = `${this.apiUrl}/transcript/${transcriptId}`;
     const pollStartTime = Date.now();
@@ -596,8 +596,8 @@ export class SpeakerDiarizationService {
           console.log(`Transcription in progress... (attempt ${attempts + 1}/${maxAttempts})`);
         }
 
-        // Wait 5 seconds before next poll
-        await new Promise(resolve => setTimeout(resolve, 5000));
+        // Wait 10 seconds before next poll
+        await new Promise(resolve => setTimeout(resolve, 10_000));
         attempts++;
       } catch (error: any) {
         // If it's already a formatted error, rethrow it

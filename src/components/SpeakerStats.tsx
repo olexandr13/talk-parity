@@ -8,6 +8,22 @@ interface SpeakerStatsProps {
   onSpeakerRename?: (speakerId: string, newName: string) => void;
 }
 
+// Define consistent colors for each speaker
+const SPEAKER_COLORS = [
+  '#2196F3', // Blue
+  '#4CAF50', // Green
+  '#FF9800', // Orange
+  '#E91E63', // Pink
+  '#9C27B0', // Purple
+  '#00BCD4', // Cyan
+  '#FFC107', // Amber
+  '#F44336', // Red
+];
+
+const getSpeakerColor = (index: number): string => {
+  return SPEAKER_COLORS[index % SPEAKER_COLORS.length];
+};
+
 export const SpeakerStats: React.FC<SpeakerStatsProps> = ({
   speakers,
   totalDuration,
@@ -82,9 +98,77 @@ export const SpeakerStats: React.FC<SpeakerStatsProps> = ({
         )}
       </div>
 
+      {/* Percentage Distribution Blocks */}
+      <div className="percentage-blocks-container">
+        {/* With Silence */}
+        <div className="percentage-block">
+          <h3 className="percentage-block-title">With Silence</h3>
+          <div className="percentage-visualization">
+            {speakers.map((speaker, index) => (
+              <div
+                key={speaker.id}
+                className="percentage-segment"
+                style={{ 
+                  width: `${speaker.percentage}%`,
+                  backgroundColor: getSpeakerColor(index)
+                }}
+                title={`${speaker.label}: ${speaker.percentage.toFixed(1)}%`}
+              >
+                <div className="percentage-segment-content">
+                  <span className="percentage-speaker-name">{speaker.label}</span>
+                  <span className="percentage-label">{speaker.percentage.toFixed(0)}%</span>
+                </div>
+              </div>
+            ))}
+            {silenceTime > 0 && silencePercentage > 0.1 && (
+              <div
+                className="percentage-segment percentage-segment-silence"
+                style={{ 
+                  width: `${silencePercentage}%`,
+                  backgroundColor: '#9E9E9E'
+                }}
+                title={`Silence: ${silencePercentage.toFixed(1)}%`}
+              >
+                <div className="percentage-segment-content">
+                  <span className="percentage-label">{silencePercentage.toFixed(0)}%</span>
+                </div>
+              </div>
+            )}
+          </div>
+        </div>
+
+        {/* Without Silence */}
+        <div className="percentage-block">
+          <h3 className="percentage-block-title">Without Silence</h3>
+          <div className="percentage-visualization">
+            {speakers.map((speaker, index) => {
+              const percentageWithoutSilence = totalSpeakingTime > 0 
+                ? (speaker.speakingTime / totalSpeakingTime) * 100 
+                : 0;
+              return (
+                <div
+                  key={speaker.id}
+                  className="percentage-segment"
+                  style={{ 
+                    width: `${percentageWithoutSilence}%`,
+                    backgroundColor: getSpeakerColor(index)
+                  }}
+                  title={`${speaker.label}: ${percentageWithoutSilence.toFixed(1)}%`}
+                >
+                  <div className="percentage-segment-content">
+                    <span className="percentage-speaker-name">{speaker.label}</span>
+                    <span className="percentage-label">{percentageWithoutSilence.toFixed(0)}%</span>
+                  </div>
+                </div>
+              );
+            })}
+          </div>
+        </div>
+      </div>
+
       <div className="speakers-list">
-        {speakers.map((speaker) => (
-          <div key={speaker.id} className="speaker-item">
+        {speakers.map((speaker, index) => (
+          <div key={speaker.id} className="speaker-item" style={{ borderLeftColor: getSpeakerColor(index) }}>
             <div className="speaker-header">
               {editingId === speaker.id ? (
                 <div className="speaker-edit-container">
@@ -128,7 +212,10 @@ export const SpeakerStats: React.FC<SpeakerStatsProps> = ({
             <div className="progress-bar-container">
               <div
                 className="progress-bar"
-                style={{ width: `${speaker.percentage}%` }}
+                style={{ 
+                  width: `${speaker.percentage}%`,
+                  backgroundColor: getSpeakerColor(index)
+                }}
               ></div>
             </div>
             

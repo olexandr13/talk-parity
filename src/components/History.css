@@ -1,0 +1,246 @@
+.history-container {
+  margin: 1.5rem 0;
+  background: white;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+}
+
+.history-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 0;
+}
+
+.history-toggle {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 1rem 1.5rem;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+  transition: background-color 0.2s;
+}
+
+.history-toggle:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.history-icon {
+  font-size: 1.5rem;
+}
+
+.history-title {
+  margin: 0;
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: #333;
+}
+
+.history-chevron {
+  margin-left: auto;
+  color: #666;
+  font-size: 0.875rem;
+  transition: transform 0.2s;
+}
+
+.clear-history-btn {
+  margin-right: 1rem;
+  padding: 0.5rem 1rem;
+  background: #f44336;
+  color: white;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: background-color 0.2s;
+}
+
+.clear-history-btn:hover {
+  background: #d32f2f;
+}
+
+.history-list {
+  border-top: 1px solid #e0e0e0;
+  max-height: 400px;
+  overflow-y: auto;
+}
+
+.history-item {
+  border-bottom: 1px solid #f0f0f0;
+}
+
+.history-item:last-child {
+  border-bottom: none;
+}
+
+.history-item-active {
+  background-color: #f0f7ff;
+  border-left: 4px solid #4caf50;
+}
+
+.history-item-main {
+  padding: 1rem 1.5rem;
+  display: flex;
+  align-items: center;
+  gap: 1rem;
+  transition: background-color 0.2s;
+}
+
+.history-item-main:hover {
+  background-color: rgba(0, 0, 0, 0.02);
+}
+
+.history-item-active .history-item-main:hover {
+  background-color: #e3f2fd;
+}
+
+.history-item-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.history-item-name {
+  font-weight: 600;
+  font-size: 1rem;
+  color: #333;
+  margin-bottom: 0.25rem;
+}
+
+.history-item-meta {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.875rem;
+  color: #666;
+  margin-bottom: 0.25rem;
+}
+
+.history-item-separator {
+  color: #ccc;
+}
+
+.history-item-date,
+.history-item-duration,
+.history-item-speakers {
+  white-space: nowrap;
+}
+
+.history-item-transcript-id {
+  font-size: 0.75rem;
+  color: #999;
+  font-family: 'Courier New', monospace;
+}
+
+.history-item-actions {
+  display: flex;
+  gap: 0.5rem;
+}
+
+.history-item-btn {
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 0.875rem;
+  font-weight: 500;
+  transition: all 0.2s;
+  background: #f5f5f5;
+  color: #333;
+}
+
+.history-item-btn:hover {
+  transform: translateY(-1px);
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.history-load-btn {
+  background: #4caf50;
+  color: white;
+}
+
+.history-load-btn:hover {
+  background: #45a049;
+}
+
+.history-rename-btn:hover {
+  background: #e0e0e0;
+}
+
+.history-delete-btn:hover {
+  background: #ffebee;
+  color: #f44336;
+}
+
+.history-item-edit {
+  flex: 1;
+  display: flex;
+  gap: 0.5rem;
+  align-items: center;
+}
+
+.history-edit-input {
+  flex: 1;
+  padding: 0.5rem;
+  border: 2px solid #4caf50;
+  border-radius: 6px;
+  font-size: 1rem;
+  font-family: inherit;
+}
+
+.history-edit-input:focus {
+  outline: none;
+  border-color: #45a049;
+}
+
+.history-edit-save,
+.history-edit-cancel {
+  padding: 0.5rem 0.75rem;
+  border: none;
+  border-radius: 6px;
+  cursor: pointer;
+  font-size: 1rem;
+  font-weight: bold;
+  transition: background-color 0.2s;
+}
+
+.history-edit-save {
+  background: #4caf50;
+  color: white;
+}
+
+.history-edit-save:hover {
+  background: #45a049;
+}
+
+.history-edit-cancel {
+  background: #f5f5f5;
+  color: #666;
+}
+
+.history-edit-cancel:hover {
+  background: #e0e0e0;
+}
+
+/* Scrollbar styling */
+.history-list::-webkit-scrollbar {
+  width: 8px;
+}
+
+.history-list::-webkit-scrollbar-track {
+  background: #f1f1f1;
+}
+
+.history-list::-webkit-scrollbar-thumb {
+  background: #ccc;
+  border-radius: 4px;
+}
+
+.history-list::-webkit-scrollbar-thumb:hover {
+  background: #999;
+}
